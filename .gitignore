@@ -122,6 +122,12 @@ dist
 # TernJS port file
 .tern-port
 
+# Extension build output
+out/
+
+# VSIX packages
+*.vsix
+
 # Stores Visual Studio Code versions used for testing Visual Studio Code extensions
 .vscode-test
 
