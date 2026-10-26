@@ -1,0 +1,6 @@
+# Stub west manifest for local extension testing (not a full Zephyr tree).
+manifest:
+  self:
+    path: .
+  remotes: []
+  projects: []

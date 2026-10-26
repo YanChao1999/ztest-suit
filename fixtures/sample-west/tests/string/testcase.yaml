@@ -1,0 +1,5 @@
+tests:
+  sample.string:
+    tags: sample
+    platform_allow:
+      - native_sim

@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# Mock west for ztest-suit local testing. Supports: west twister ...
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT_DIR="${ROOT}/twister-out"
+REPORT="${OUT_DIR}/twister.json"
+
+if [[ "${1:-}" != "twister" ]]; then
+  echo "mock-west: unsupported command: $*" >&2
+  echo "Only 'west twister' is simulated in this fixture." >&2
+  exit 2
+fi
+shift
+
+suite_filter=""
+test_path="tests"
+platform="native_sim"
+extra=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -T)
+      test_path="$2"
+      shift 2
+      ;;
+    -s|--scenario)
+      suite_filter="$2"
+      shift 2
+      ;;
+    --platform|-p)
+      platform="$2"
+      shift 2
+      ;;
+    --list-tests)
+      echo "math_suite.test_add"
+      echo "math_suite.test_sub"
+      echo "math_suite.test_mul"
+      echo "string_suite.test_strlen"
+      echo "string_suite.test_strcmp"
+      echo "string_suite.test_fail_demo"
+      exit 0
+      ;;
+    *)
+      extra+=("$1")
+      shift
+      ;;
+  esac
+done
+
+mkdir -p "${OUT_DIR}"
+
+declare -a ALL_CASES=(
+  "math_suite.test_add:pass"
+  "math_suite.test_sub:pass"
+  "math_suite.test_mul:pass"
+  "string_suite.test_strlen:pass"
+  "string_suite.test_strcmp:pass"
+  "string_suite.test_fail_demo:fail"
+)
+
+echo "INFO    - Mock twister (ztest-suit fixture)"
+echo "INFO    - Zephyr version: fixture"
+echo "INFO    - Using platform: ${platform}"
+echo "INFO    - Test path: ${test_path}"
+if [[ -n "${suite_filter}" ]]; then
+  echo "INFO    - Suite filter: ${suite_filter}"
+fi
+echo ""
+
+json_cases="["
+first=1
+failed=0
+ran=0
+
+for entry in "${ALL_CASES[@]}"; do
+  name="${entry%%:*}"
+  expect="${entry##*:}"
+  suite="${name%%.*}"
+  case_name="${name#*.}"
+
+  if [[ -n "${suite_filter}" && "${suite}" != "${suite_filter}" && "${name}" != "${suite_filter}"* ]]; then
+    # Also allow filtering by full scenario-ish names containing suite
+    if [[ "${suite_filter}" != *"${suite}"* ]]; then
+      continue
+    fi
+  fi
+
+  ran=$((ran + 1))
+  echo "START - ${name}"
+  sleep 0.05
+
+  if [[ "${expect}" == "fail" ]]; then
+    echo "FAIL - ${name}"
+    status="failed"
+    failed=$((failed + 1))
+  else
+    echo "PASS - ${case_name}"
+    status="passed"
+  fi
+
+  if [[ ${first} -eq 0 ]]; then
+    json_cases+=","
+  fi
+  first=0
+  json_cases+=$(printf '\n    {"name": "%s", "status": "%s"}' "${name}" "${status}")
+done
+
+json_cases+=$'\n  ]'
+
+cat > "${REPORT}" <<EOF
+{
+  "testsuites": [
+    {
+      "name": "sample",
+      "platform": "${platform}",
+      "testcases": ${json_cases}
+    }
+  ]
+}
+EOF
+
+echo ""
+echo "INFO    - ${ran} test(s) executed, ${failed} failed"
+echo "INFO    - Writing JSON report ${REPORT}"
+
+if [[ ${failed} -gt 0 ]]; then
+  exit 1
+fi
+exit 0

@@ -5,6 +5,14 @@
   "version": "0.1.0",
   "publisher": "ztest-suit",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YanChao1999/ztest-suit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YanChao1999/ztest-suit/issues"
+  },
+  "homepage": "https://github.com/YanChao1999/ztest-suit#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -19,7 +27,8 @@
     "onCommand:ztest.runSuite",
     "onCommand:ztest.runCase",
     "onCommand:ztest.cancelRun",
-    "onCommand:ztest.openCase"
+    "onCommand:ztest.openCase",
+    "onCommand:ztest.autoPilotFix"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -52,6 +61,11 @@
       {
         "command": "ztest.openCase",
         "title": "ZTEST: Open Case"
+      },
+      {
+        "command": "ztest.autoPilotFix",
+        "title": "auto-poilot-fix",
+        "icon": "$(sparkle)"
       }
     ],
     "viewsContainers": {
@@ -87,6 +101,17 @@
           "command": "ztest.cancelRun",
           "when": "view == ztestTests && ztest.running",
           "group": "navigation@3"
+        },
+        {
+          "command": "ztest.autoPilotFix",
+          "when": "view == ztestTests && ztest.hasFailures",
+          "group": "navigation@4"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ztest.autoPilotFix",
+          "when": "ztest.hasFailures"
         }
       ],
       "view/item/context": [
@@ -114,6 +139,11 @@
           "command": "ztest.openCase",
           "when": "view == ztestTests && viewItem == ztestCase",
           "group": "2_nav@1"
+        },
+        {
+          "command": "ztest.autoPilotFix",
+          "when": "view == ztestTests && ztest.hasFailures",
+          "group": "3_fix@1"
         }
       ]
     },
@@ -194,14 +224,25 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "tsc -p ./ --noEmit",
-    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js"
+    "compile": "NODE_OPTIONS=--max-old-space-size=4096 tsc -p ./",
+    "watch": "NODE_OPTIONS=--max-old-space-size=4096 tsc -watch -p ./",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 tsc -p ./ --noEmit",
+    "mcp": "node out/mcp/server.js",
+    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/copilot/autoPilotFix.test.js",
+    "test:mcp-smoke": "node out/mcp/smoke.js",
+    "test": "npm run compile && npm run test:unit && npm run test:mcp-smoke",
+    "package": "vsce package",
+    "publish:vsce": "vsce publish",
+    "publish:ovsx": "ovsx publish"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.2",
+    "ovsx": "^0.10.1",
     "typescript": "^5.3.3"
   }
 }

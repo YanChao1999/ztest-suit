@@ -134,6 +134,20 @@ export class TestModel extends EventEmitter {
     this.emit('changed');
   }
 
+  getFailedCases(): TestCase[] {
+    const failed: TestCase[] = [];
+    for (const suite of this.suites.values()) {
+      for (const c of suite.cases) {
+        if (c.status === 'failed') {
+          failed.push(c);
+        }
+      }
+    }
+    return failed.sort((a, b) =>
+      `${a.suite}.${a.name}`.localeCompare(`${b.suite}.${b.name}`)
+    );
+  }
+
   getSummary(): { passed: number; failed: number; skipped: number; notRun: number; running: number } {
     let passed = 0;
     let failed = 0;

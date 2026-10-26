@@ -21,9 +21,9 @@ VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from 
 
 1. Open this folder in VS Code / Cursor
 2. `npm install` && `npm run compile`
-3. Press **F5** (Run Extension) to launch an Extension Development Host
-4. Open a Zephyr workspace that contains ZTEST sources
-5. Open the **ZTEST** activity bar view and click **Refresh**
+3. Press **F5** (**Run Extension**) — opens the local fixture at [`fixtures/sample-west`](fixtures/sample-west) (mock west + sample ZTEST sources)
+4. Open the **ZTEST** activity bar view → **Refresh**, then **Run All**
+5. For a real Zephyr tree, open that folder instead (or use **Run Extension (empty window)**) and point settings at your `.start_docker.sh` / west wrapper
 
 ## Settings
 
@@ -85,8 +85,31 @@ The scanner looks for:
 | `ZTEST: Run Case` | Run suite args, match case in results |
 | `ZTEST: Cancel Run` | Kill the running process |
 | `ZTEST: Open Case` | Jump to source |
+| `auto-poilot-fix` | When failures exist: open Copilot/Cursor Agent with an **evidence-first** fix prompt (failed cases, log tail, source excerpts) |
 
 Output appears in the **ZTEST** output channel. Status bar shows `ZTEST: N passed, M failed`.
+
+## MCP server
+
+Agents (Cursor, etc.) can drive the same discover/run stack over **stdio MCP**.
+
+| Tool | Purpose |
+|---|---|
+| `ztest_list` | Scan macros and list suites/cases |
+| `ztest_run` | Run all / suite / case (`dryRun` previews the wrapper command) |
+| `ztest_status` | Summary + statuses (reads `twister.json` when present) |
+| `ztest_locate` | Resolve suite/case → `file` + `line` |
+| `ztest_config` | Effective settings and expanded Run All command |
+
+Project config: [`.cursor/mcp.json`](.cursor/mcp.json) (defaults `ZTEST_WORKSPACE` to `fixtures/sample-west`).
+
+```bash
+npm run compile
+ZTEST_WORKSPACE=./fixtures/sample-west npm run mcp   # stdio server
+npm run test:mcp-smoke                               # fixture discover+run check
+```
+
+Env overrides: `ZTEST_WORKSPACE`, `ZTEST_COMMAND_PREFIX`, `ZTEST_TEST_PATH`, `ZTEST_PLATFORM`, `ZTEST_REPORT_PATH`. Settings also load from the workspace `.vscode/settings.json` (`ztest.*` keys).
 
 ## Develop
 
@@ -95,7 +118,33 @@ export PATH="$HOME/.local/node/bin:$PATH"   # if using a user-local Node
 npm install
 npm run compile
 npm run test:unit
+npm run test:mcp-smoke
+npm run package          # builds *.vsix
 ```
+
+## CI / publish
+
+GitHub Actions:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| [CI](.github/workflows/ci.yml) | push / PR | `compile` + unit tests + fixture smoke + package VSIX |
+| [Publish](.github/workflows/publish.yml) | tag `v*` (or manual) | re-test, upload VSIX to GitHub Release; Marketplace / Open VSX if secrets set |
+
+Release flow:
+
+```bash
+# bump version in package.json, then:
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Optional repo secrets:
+
+- `VSCE_PAT` — publish to [VS Code Marketplace](https://marketplace.visualstudio.com/)
+- `OVSX_PAT` — publish to [Open VSX](https://open-vsx.org/)
+
+Without those secrets, tagging still creates a GitHub Release with the `.vsix` attached.
 
 ## License
 

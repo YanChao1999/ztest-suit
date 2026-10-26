@@ -125,8 +125,12 @@ dist
 # Extension build output
 out/
 
+# Fixture mock twister output
+fixtures/sample-west/twister-out/
+
 # VSIX packages
 *.vsix
+*.vsix.map
 
 # Stores Visual Studio Code versions used for testing Visual Studio Code extensions
 .vscode-test

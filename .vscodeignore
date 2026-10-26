@@ -1,5 +1,8 @@
 .vscode/**
 .vscode-test/**
+.cursor/**
+.github/**
+fixtures/**
 src/**
 .gitignore
 .gitmodules
@@ -10,5 +13,10 @@ src/**
 node_modules/**
 .git/**
 *.vsix
-README.md
 **/*.md
+!README.md
+out/**/*.test.js
+out/**/*.test.d.ts
+out/**/*.test.js.map
+out/mcp/**
+# MCP runs from the repo / Cursor (.cursor/mcp.json), not from the VSIX

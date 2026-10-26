@@ -16,12 +16,17 @@ import {
   TestTreeProvider,
   TreeNode,
 } from './tree/testTreeProvider';
+import {
+  LastRunEvidence,
+  runAutoPilotFix,
+} from './copilot/autoPilotFix';
 
 let model: TestModel;
 let treeProvider: TestTreeProvider;
 let runner: TwisterRunner;
 let output: vscode.OutputChannel;
 let statusBar: vscode.StatusBarItem;
+let lastRunEvidence: LastRunEvidence | undefined;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   model = new TestModel();
@@ -47,11 +52,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('ztest.cancelRun', () => cancelRun()),
     vscode.commands.registerCommand('ztest.openCase', (node?: TreeNode) =>
       openNode(node)
-    )
+    ),
+    vscode.commands.registerCommand('ztest.autoPilotFix', () => autoPilotFix())
   );
 
-  model.on('changed', () => updateStatusBar());
+  model.on('changed', () => {
+    updateStatusBar();
+    void updateFailureContext();
+  });
   updateStatusBar();
+  await updateFailureContext();
   await refreshTests();
 }
 
@@ -227,6 +237,14 @@ async function runTests(filter: { suite?: string; caseName?: string }): Promise<
     }
 
     const reportPath = resolveReportPath(settings);
+    lastRunEvidence = {
+      command,
+      cwd: settings.cwd,
+      exitCode: result.exitCode,
+      logTail: result.stdout + '\n' + result.stderr,
+      reportPath,
+    };
+
     const fromJson = await loadTwisterReport(reportPath);
     const fromLog = parseTwisterLog(result.stdout + '\n' + result.stderr);
     const merged = mergeResults(fromJson, fromLog, filter);
@@ -306,4 +324,32 @@ function updateStatusBar(): void {
   const s = model.getSummary();
   statusBar.text = `ZTEST: ${s.passed} passed, ${s.failed} failed`;
   statusBar.tooltip = `passed=${s.passed} failed=${s.failed} skipped=${s.skipped} notRun=${s.notRun} running=${s.running}`;
+}
+
+async function updateFailureContext(): Promise<void> {
+  const hasFailures = model.getFailedCases().length > 0;
+  await vscode.commands.executeCommand(
+    'setContext',
+    'ztest.hasFailures',
+    hasFailures
+  );
+}
+
+async function autoPilotFix(): Promise<void> {
+  const failed = model.getFailedCases();
+  if (failed.length === 0) {
+    vscode.window.showInformationMessage(
+      'ZTEST auto-poilot-fix: no failed cases yet. Run tests first.'
+    );
+    return;
+  }
+
+  await runAutoPilotFix({
+    failed,
+    evidence: lastRunEvidence,
+    workspaceFolder: getWorkspaceFolderPath(),
+  });
+  output.appendLine(
+    `ZTEST: auto-poilot-fix sent ${failed.length} failed case(s) to Copilot/Agent (evidence-first).`
+  );
 }
