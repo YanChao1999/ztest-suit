@@ -1,26 +1,30 @@
-# Sample west workspace (fixture)
+# Zephyr west fixture (formal layout + demo runner)
 
-Local stand-in for a Zephyr west tree so you can try **ZTEST Suit** without a full SDK.
+Contains real ZTEST app layout (`CMakeLists.txt`, `prj.conf`, `testcase.yaml`, `src/*.c`) and a **demo/CI mock** `bin/west` so the extension works without a full Zephyr download.
 
-## Layout
+Pinned Zephyr for real runs: **v4.1.0** (`west.yml`, `clone-depth: 1`).
 
-- `tests/math/test_math.c` — `math_suite` (3 cases, all pass in mock)
-- `tests/string/test_string.c` — `string_suite` (2 pass + `test_fail_demo` fails)
-- `bin/west` — mock `west twister` that writes `twister-out/twister.json`
-- `.start_docker.sh` — docker-style wrapper used by extension settings
-
-## Try with the extension
-
-1. In the `ztest-suit` repo: `npm run compile`, then **F5** (Run Extension)
-2. Extension Host opens this fixture folder (see launch config)
-3. Open the **ZTEST** activity bar → Refresh
-4. Run All / Run Suite / click a case to navigate
-
-## CLI smoke test
+## Quick demo (no SDK)
 
 ```bash
 cd fixtures/sample-west
 ./.start_docker.sh -b native_sim west twister -T tests --platform native_sim
-./.start_docker.sh -b native_sim west twister -T tests -s math_suite
-cat twister-out/twister.json
 ```
+
+The math and string suites pass in the mock runner, including the empty-string length case.
+
+## Real west (optional)
+
+```bash
+cd fixtures
+west init -l sample-west   # creates fixtures/.west + pulls zephyr/
+west update
+west zephyr-export
+export ZEPHYR_BASE="$PWD/zephyr"
+# then use real west from PATH (ahead of sample-west/bin)
+west twister -T sample-west/tests --platform native_sim
+```
+
+## ZTEST Suit settings
+
+This folder’s `.vscode/settings.json` uses `./.start_docker.sh -b native_sim` → mock `west` for reliable local/CI demos. After a real `west update`, clear `ztest.commandPrefix` and point `PATH` at system west.

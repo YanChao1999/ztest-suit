@@ -1,5 +1,9 @@
 tests:
-  sample.math:
-    tags: sample
+  ztest_suit.math:
+    tags:
+      - ztest_suit
+      - math
     platform_allow:
+      - native_sim
+    integration_platforms:
       - native_sim

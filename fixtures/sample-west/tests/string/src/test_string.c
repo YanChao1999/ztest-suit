@@ -8,13 +8,12 @@ ZTEST(string_suite, test_strlen)
 	zassert_equal(strlen("ztest"), 5, "strlen mismatch");
 }
 
-ZTEST_USER(string_suite, test_strcmp)
+ZTEST(string_suite, test_strcmp)
 {
 	zassert_equal(strcmp("a", "a"), 0, "equal strings");
 }
 
-/* Intentionally failing case — mock runner marks this FAIL for demo. */
-ZTEST(string_suite, test_fail_demo)
+ZTEST(string_suite, test_empty_string)
 {
-	zassert_true(false, "demo failure");
+	zassert_equal(strlen(""), 0, "empty string length");
 }

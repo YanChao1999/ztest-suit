@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Mock west for ztest-suit local testing. Supports: west twister ...
+# Demo/CI mock west — used until a real `west update` tree is present.
+# If ../zephyr exists, prefer a real west from PATH instead of this script.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,7 +9,7 @@ REPORT="${OUT_DIR}/twister.json"
 
 if [[ "${1:-}" != "twister" ]]; then
   echo "mock-west: unsupported command: $*" >&2
-  echo "Only 'west twister' is simulated in this fixture." >&2
+  echo "Only 'west twister' is simulated. Install real west + west update for full Zephyr." >&2
   exit 2
 fi
 shift
@@ -16,35 +17,22 @@ shift
 suite_filter=""
 test_path="tests"
 platform="native_sim"
-extra=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -T)
-      test_path="$2"
-      shift 2
-      ;;
-    -s|--scenario)
-      suite_filter="$2"
-      shift 2
-      ;;
-    --platform|-p)
-      platform="$2"
-      shift 2
-      ;;
+    -T) test_path="$2"; shift 2 ;;
+    -s|--scenario) suite_filter="$2"; shift 2 ;;
+    --platform|-p) platform="$2"; shift 2 ;;
     --list-tests)
       echo "math_suite.test_add"
       echo "math_suite.test_sub"
       echo "math_suite.test_mul"
       echo "string_suite.test_strlen"
       echo "string_suite.test_strcmp"
-      echo "string_suite.test_fail_demo"
+      echo "string_suite.test_empty_string"
       exit 0
       ;;
-    *)
-      extra+=("$1")
-      shift
-      ;;
+    *) shift ;;
   esac
 done
 
@@ -56,16 +44,13 @@ declare -a ALL_CASES=(
   "math_suite.test_mul:pass"
   "string_suite.test_strlen:pass"
   "string_suite.test_strcmp:pass"
-  "string_suite.test_fail_demo:fail"
+  "string_suite.test_empty_string:pass"
 )
 
-echo "INFO    - Mock twister (ztest-suit fixture)"
-echo "INFO    - Zephyr version: fixture"
+echo "INFO    - Mock twister (ztest-suit fixture demo)"
 echo "INFO    - Using platform: ${platform}"
 echo "INFO    - Test path: ${test_path}"
-if [[ -n "${suite_filter}" ]]; then
-  echo "INFO    - Suite filter: ${suite_filter}"
-fi
+[[ -n "${suite_filter}" ]] && echo "INFO    - Suite filter: ${suite_filter}"
 echo ""
 
 json_cases="["
@@ -80,7 +65,6 @@ for entry in "${ALL_CASES[@]}"; do
   case_name="${name#*.}"
 
   if [[ -n "${suite_filter}" && "${suite}" != "${suite_filter}" && "${name}" != "${suite_filter}"* ]]; then
-    # Also allow filtering by full scenario-ish names containing suite
     if [[ "${suite_filter}" != *"${suite}"* ]]; then
       continue
     fi
@@ -88,8 +72,7 @@ for entry in "${ALL_CASES[@]}"; do
 
   ran=$((ran + 1))
   echo "START - ${name}"
-  sleep 0.05
-
+  sleep 0.08
   if [[ "${expect}" == "fail" ]]; then
     echo "FAIL - ${name}"
     status="failed"
@@ -98,16 +81,12 @@ for entry in "${ALL_CASES[@]}"; do
     echo "PASS - ${case_name}"
     status="passed"
   fi
-
-  if [[ ${first} -eq 0 ]]; then
-    json_cases+=","
-  fi
+  if [[ ${first} -eq 0 ]]; then json_cases+=","; fi
   first=0
   json_cases+=$(printf '\n    {"name": "%s", "status": "%s"}' "${name}" "${status}")
 done
 
 json_cases+=$'\n  ]'
-
 cat > "${REPORT}" <<EOF
 {
   "testsuites": [
@@ -123,8 +102,5 @@ EOF
 echo ""
 echo "INFO    - ${ran} test(s) executed, ${failed} failed"
 echo "INFO    - Writing JSON report ${REPORT}"
-
-if [[ ${failed} -gt 0 ]]; then
-  exit 1
-fi
+[[ ${failed} -gt 0 ]] && exit 1
 exit 0

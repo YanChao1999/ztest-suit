@@ -125,8 +125,31 @@ dist
 # Extension build output
 out/
 
-# Fixture mock twister output
-fixtures/sample-west/twister-out/
+# Fixture west / Zephyr checkouts and outputs (do not commit)
+# west topdir is fixtures/ when using: west init -l sample-west
+fixtures/.west/
+fixtures/zephyr/
+fixtures/modules/
+fixtures/bootloader/
+fixtures/tools/
+fixtures/twister-out*/
+fixtures/build/
+fixtures/sample-west/twister-out*/
+fixtures/sample-west/build/
+docs/demo-capture/
+docs/demo-synthetic.gif
+docs/shots/01-vscode-sample-west.png
+docs/shots/frames/
+docs/shots/story/
+
+# Accidental local uv / west init at repo root
+.venv/
+.venv-demo/
+.west/
+.python-version
+uv.lock
+pyproject.toml
+main.py
 
 # VSIX packages
 *.vsix

@@ -1,6 +1,14 @@
-# Stub west manifest for local extension testing (not a full Zephyr tree).
+# Formal west workspace for ZTEST Suit local testing.
+# Bootstrap:  cd fixtures/sample-west && west init -l . && west update
 manifest:
   self:
     path: .
-  remotes: []
-  projects: []
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: v4.1.0
+      import: true
+      clone-depth: 1

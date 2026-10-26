@@ -1,6 +1,23 @@
 # ZTEST Suit
 
+[![CI](https://github.com/YanChao1999/ztest-suit/actions/workflows/ci.yml/badge.svg)](https://github.com/YanChao1999/ztest-suit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85-blue?logo=visualstudiocode)](https://code.visualstudio.com/)
+[![MCP](https://img.shields.io/badge/MCP-stdio-purple)](.cursor/mcp.json)
+[![version](https://img.shields.io/badge/version-0.1.0-green)](package.json)
+
 VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from source macros, show them in a sidebar, jump to definitions, and run tests through a configurable **west / twister** command wrapper (including Docker entry scripts).
+
+![ZTEST Suit screencast — click case, navigate, auto-poilot-fix](docs/shots/vscode-ztest-demo.gif)
+
+*Clipped from a real VS Code screencast: click failing case → navigate to source → **auto-poilot-fix** → Copilot/Agent starts fixing.*
+
+<details>
+<summary>Static screenshot</summary>
+
+![ZTEST Suit in VS Code — Run All with 5 passed / 1 failed](docs/shots/vscode-ztest-run.png)
+
+</details>
 
 ## Features (MVP)
 
@@ -9,21 +26,28 @@ VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from 
 - **Manual run**: Run All / Run Suite / Run Case (toolbar + context menu)
 - **Command wrapping**: prefix every west invocation (e.g. `./.start_docker.sh -b XXX`)
 - **Results**: parse `twister.json` when present; fall back to log heuristics or process exit code
+- **auto-poilot-fix**: on failures, open Copilot / Cursor Agent with an **evidence-first** fix prompt
 
 **Not in MVP (planned v2):** auto rebuild/run on save.
 
 ## Requirements
 
-- A Zephyr west workspace (or Docker wrapper that can run `west twister`)
+- A Zephyr west workspace (or Docker / demo wrapper that can run `west twister`)
 - VS Code / Cursor `^1.85.0`
 
 ## Quick start
 
 1. Open this folder in VS Code / Cursor
 2. `npm install` && `npm run compile`
-3. Press **F5** (**Run Extension**) — opens the local fixture at [`fixtures/sample-west`](fixtures/sample-west) (mock west + sample ZTEST sources)
-4. Open the **ZTEST** activity bar view → **Refresh**, then **Run All**
-5. For a real Zephyr tree, open that folder instead (or use **Run Extension (empty window)**) and point settings at your `.start_docker.sh` / west wrapper
+3. Press **F5** (**Run Extension**) — opens [`fixtures/sample-west`](fixtures/sample-west)
+4. **ZTEST** activity bar → **Refresh** → **Run All** → **auto-poilot-fix** after the demo failure
+5. Optional real Zephyr: see [`fixtures/sample-west/README.md`](fixtures/sample-west/README.md)
+
+Install the VSIX:
+
+```bash
+code --install-extension ./ztest-suit-0.1.0.vsix
+```
 
 ## Settings
 
@@ -61,15 +85,7 @@ Empty `commandPrefix` collapses to a bare `west …` command.
 }
 ```
 
-Expanded run:
-
-```bash
-./.start_docker.sh -b native_sim west twister -T tests/bluetooth --platform native_sim -s my_suite
-```
-
 ## Discovery
-
-The scanner looks for:
 
 - `ZTEST_SUITE(suite, …)`
 - `ZTEST(suite, case)` / `ZTEST_F(…)`
@@ -85,66 +101,55 @@ The scanner looks for:
 | `ZTEST: Run Case` | Run suite args, match case in results |
 | `ZTEST: Cancel Run` | Kill the running process |
 | `ZTEST: Open Case` | Jump to source |
-| `auto-poilot-fix` | When failures exist: open Copilot/Cursor Agent with an **evidence-first** fix prompt (failed cases, log tail, source excerpts) |
-
-Output appears in the **ZTEST** output channel. Status bar shows `ZTEST: N passed, M failed`.
+| `auto-poilot-fix` | Failures → Copilot/Agent with evidence-first prompt |
 
 ## MCP server
-
-Agents (Cursor, etc.) can drive the same discover/run stack over **stdio MCP**.
 
 | Tool | Purpose |
 |---|---|
 | `ztest_list` | Scan macros and list suites/cases |
-| `ztest_run` | Run all / suite / case (`dryRun` previews the wrapper command) |
-| `ztest_status` | Summary + statuses (reads `twister.json` when present) |
-| `ztest_locate` | Resolve suite/case → `file` + `line` |
-| `ztest_config` | Effective settings and expanded Run All command |
-
-Project config: [`.cursor/mcp.json`](.cursor/mcp.json) (defaults `ZTEST_WORKSPACE` to `fixtures/sample-west`).
+| `ztest_run` | Run all / suite / case (`dryRun` supported) |
+| `ztest_status` | Summary + statuses |
+| `ztest_locate` | Suite/case → `file` + `line` |
+| `ztest_config` | Effective settings |
 
 ```bash
 npm run compile
-ZTEST_WORKSPACE=./fixtures/sample-west npm run mcp   # stdio server
-npm run test:mcp-smoke                               # fixture discover+run check
+ZTEST_WORKSPACE=./fixtures/sample-west npm run mcp
+npm run test:mcp-smoke
 ```
-
-Env overrides: `ZTEST_WORKSPACE`, `ZTEST_COMMAND_PREFIX`, `ZTEST_TEST_PATH`, `ZTEST_PLATFORM`, `ZTEST_REPORT_PATH`. Settings also load from the workspace `.vscode/settings.json` (`ztest.*` keys).
 
 ## Develop
 
 ```bash
-export PATH="$HOME/.local/node/bin:$PATH"   # if using a user-local Node
-npm install
-npm run compile
-npm run test:unit
-npm run test:mcp-smoke
-npm run package          # builds *.vsix
+export PATH="$HOME/.local/node/bin:$PATH"
+npm install && npm run compile
+npm test
+npm run package
 ```
+
+Homepage screenshots live in [`docs/shots/`](docs/shots/) (captured from a real VS Code session). To refresh after a UI change, open the fixture, Run All, then:
+
+```bash
+WID=$(wmctrl -l | grep sample-west | awk '{print $1; exit}')
+wmctrl -i -a "$WID"
+xwd -id "$WID" -out /tmp/ztest.xwd
+ffmpeg -y -i /tmp/ztest.xwd docs/shots/vscode-ztest-run.png
+```
+
 
 ## CI / publish
 
-GitHub Actions:
-
 | Workflow | Trigger | What it does |
 |---|---|---|
-| [CI](.github/workflows/ci.yml) | push / PR | `compile` + unit tests + fixture smoke + package VSIX |
-| [Publish](.github/workflows/publish.yml) | tag `v*` (or manual) | re-test, upload VSIX to GitHub Release; Marketplace / Open VSX if secrets set |
-
-Release flow:
+| [CI](.github/workflows/ci.yml) | push / PR | compile + unit + fixture smoke + package VSIX |
+| [Publish](.github/workflows/publish.yml) | tag `v*` | re-test, GitHub Release VSIX; Marketplace / Open VSX if secrets set |
 
 ```bash
-# bump version in package.json, then:
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.0 && git push origin v0.1.0
 ```
 
-Optional repo secrets:
-
-- `VSCE_PAT` — publish to [VS Code Marketplace](https://marketplace.visualstudio.com/)
-- `OVSX_PAT` — publish to [Open VSX](https://open-vsx.org/)
-
-Without those secrets, tagging still creates a GitHub Release with the `.vsix` attached.
+Secrets (optional): `VSCE_PAT`, `OVSX_PAT`.
 
 ## License
 

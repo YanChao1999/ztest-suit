@@ -8,5 +8,12 @@
   "ztest.runCaseArgs": "-s {suite}",
   "ztest.reportPath": "twister-out/twister.json",
   "ztest.scanGlobs": ["tests/**/*.{c,h}"],
-  "ztest.scanExclude": ["**/build/**", "**/twister-out*/**", "**/.git/**"]
+  "ztest.scanExclude": [
+    "**/build/**",
+    "**/twister-out*/**",
+    "**/zephyr/**",
+    "**/modules/**",
+    "**/.west/**",
+    "**/.git/**"
+  ]
 }
