@@ -44,4 +44,23 @@ describe('parseZtestSource', () => {
     assert.equal(result.suites.length, 0);
     assert.equal(result.cases.length, 0);
   });
+
+  it('ignores comments, literals, and #define macros', () => {
+    const src = [
+      '// ZTEST(math_suite, commented_out)',
+      '/* ZTEST(math_suite, block_commented) */',
+      'const char *s = "ZTEST(math_suite, in_string)";',
+      '#define ZTEST(suite, fn) void fn(void)',
+      '#define ZTEST_SUITE(name, a, b, c, d, e)',
+      'ZTEST_SUITE(math_suite, NULL, NULL, NULL, NULL, NULL);',
+      'ZTEST(math_suite, test_real)',
+      '{',
+      '}',
+    ].join('\n');
+    const result = parseZtestSource(src, 'x.c');
+    assert.equal(result.suites.length, 1);
+    assert.equal(result.suites[0].name, 'math_suite');
+    assert.equal(result.cases.length, 1);
+    assert.equal(result.cases[0].name, 'test_real');
+  });
 });

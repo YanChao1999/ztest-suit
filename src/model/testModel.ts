@@ -12,6 +12,8 @@ export interface TestCase {
 
 export interface TestSuite {
   name: string;
+  /** Twister scenario id from testcase.yaml (for `-s`), when known. */
+  scenario?: string;
   file?: string;
   line?: number;
   cases: TestCase[];
@@ -41,7 +43,10 @@ export class TestModel extends EventEmitter {
     return this.suites.get(name);
   }
 
-  ensureSuite(name: string, location?: TestLocation): TestSuite {
+  ensureSuite(
+    name: string,
+    location?: TestLocation & { scenario?: string }
+  ): TestSuite {
     let suite = this.suites.get(name);
     if (!suite) {
       suite = {
@@ -50,13 +55,28 @@ export class TestModel extends EventEmitter {
         status: 'notRun',
         file: location?.file,
         line: location?.line,
+        scenario: location?.scenario,
       };
       this.suites.set(name, suite);
     } else if (location) {
-      suite.file = location.file;
-      suite.line = location.line;
+      if (location.file) {
+        suite.file = location.file;
+      }
+      if (location.line !== undefined) {
+        suite.line = location.line;
+      }
+      if (location.scenario) {
+        suite.scenario = location.scenario;
+      }
     }
     return suite;
+  }
+
+  setSuiteScenario(name: string, scenario: string): void {
+    const suite = this.suites.get(name);
+    if (suite) {
+      suite.scenario = scenario;
+    }
   }
 
   upsertCase(testCase: Omit<TestCase, 'status'> & { status?: TestStatus }): TestCase {

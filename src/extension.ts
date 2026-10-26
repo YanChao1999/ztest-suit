@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
-import { getSettings, getWorkspaceFolderPath, resolveReportPath } from './config/settings';
+import {
+  getSettings,
+  getWorkspaceFolder,
+  getWorkspaceFolderPath,
+  resolveReportPath,
+} from './config/settings';
 import { applyScanToModel, scanFiles } from './discovery/ztestScanner';
 import { TestModel } from './model/testModel';
 import { buildRunCommand } from './run/commandBuilder';
@@ -72,7 +77,7 @@ export function deactivate(): void {
 }
 
 async function refreshTests(): Promise<void> {
-  const folder = getWorkspaceFolderPath();
+  const folder = getWorkspaceFolder();
   if (!folder) {
     vscode.window.showWarningMessage('ZTEST: open a workspace folder first.');
     return;
@@ -85,13 +90,18 @@ async function refreshTests(): Promise<void> {
       : settings.scanExclude.length === 1
         ? settings.scanExclude[0]
         : `{${settings.scanExclude.join(',')}}`;
+
+  // Scope discovery to the same folder used for execution (multi-root safe).
   const uris: vscode.Uri[] = [];
   for (const glob of settings.scanGlobs) {
-    const found = await vscode.workspace.findFiles(glob, exclude);
+    const includePattern = new vscode.RelativePattern(folder, glob);
+    const excludePattern = exclude
+      ? new vscode.RelativePattern(folder, exclude)
+      : null;
+    const found = await vscode.workspace.findFiles(includePattern, excludePattern);
     uris.push(...found);
   }
 
-  // Deduplicate paths
   const paths = [...new Set(uris.map((u) => u.fsPath))];
   const result = await scanFiles(paths);
   model.clear();
@@ -191,6 +201,9 @@ async function runTests(filter: { suite?: string; caseName?: string }): Promise<
   }
 
   const settings = getSettings();
+  const scenario = filter.suite
+    ? model.getSuite(filter.suite)?.scenario ?? filter.suite
+    : undefined;
   const extraArgsTemplate = filter.caseName
     ? settings.runCaseArgs
     : filter.suite
@@ -206,6 +219,7 @@ async function runTests(filter: { suite?: string; caseName?: string }): Promise<
     platform: settings.platform,
     suite: filter.suite,
     caseName: filter.caseName,
+    scenario,
   });
 
   model.setAllStatus('running', {
@@ -218,6 +232,9 @@ async function runTests(filter: { suite?: string; caseName?: string }): Promise<
   output.appendLine('');
   output.appendLine(`$ ${command}`);
   output.appendLine(`cwd: ${settings.cwd}`);
+
+  const reportPath = resolveReportPath(settings);
+  const runStartedAt = Date.now();
 
   try {
     const result = await runner.run({
@@ -236,7 +253,6 @@ async function runTests(filter: { suite?: string; caseName?: string }): Promise<
       return;
     }
 
-    const reportPath = resolveReportPath(settings);
     lastRunEvidence = {
       command,
       cwd: settings.cwd,
@@ -245,12 +261,13 @@ async function runTests(filter: { suite?: string; caseName?: string }): Promise<
       reportPath,
     };
 
-    const fromJson = await loadTwisterReport(reportPath);
+    const fromJson = await loadTwisterReport(reportPath, {
+      newerThanMs: runStartedAt - 1000,
+    });
     const fromLog = parseTwisterLog(result.stdout + '\n' + result.stderr);
     const merged = mergeResults(fromJson, fromLog, filter);
 
     if (merged.length === 0) {
-      // Fallback: mark targeted cases by process exit code
       const status = result.exitCode === 0 ? 'passed' : 'failed';
       model.setAllStatus(status, {
         suite: filter.suite,

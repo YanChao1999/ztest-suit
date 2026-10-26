@@ -172,13 +172,13 @@
         },
         "ztest.runSuiteArgs": {
           "type": "string",
-          "default": "-s {suite}",
-          "description": "Extra args when running a suite. Inserted into {extraArgs}."
+          "default": "-s {scenario}",
+          "description": "Extra args when running a suite. Inserted into {extraArgs}. Prefer {scenario} (testcase.yaml id); {suite} is the ZTEST_SUITE symbol."
         },
         "ztest.runCaseArgs": {
           "type": "string",
-          "default": "-s {suite}",
-          "description": "Extra args when running a case. MVP runs the suite then matches the case in results."
+          "default": "-s {scenario}",
+          "description": "Extra args when running a case. Prefer {scenario}; MVP runs the scenario then matches the case in results."
         },
         "ztest.testPath": {
           "type": "string",
@@ -228,7 +228,7 @@
     "watch": "NODE_OPTIONS=--max-old-space-size=4096 tsc -watch -p ./",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 tsc -p ./ --noEmit",
     "mcp": "node out/mcp/server.js",
-    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/copilot/autoPilotFix.test.js",
+    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/discovery/scenarioMap.test.js out/config/loadWorkspaceSettings.test.js out/copilot/autoPilotFix.test.js",
     "test:mcp-smoke": "node out/mcp/smoke.js",
     "test": "npm run compile && npm run test:unit && npm run test:mcp-smoke",
     "package": "vsce package",

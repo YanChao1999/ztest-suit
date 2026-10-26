@@ -13,7 +13,12 @@ ZTEST(string_suite, test_strcmp)
 	zassert_equal(strcmp("a", "a"), 0, "equal strings");
 }
 
-ZTEST(string_suite, test_empty_string)
+/*
+ * Intentionally failing demo case — useful for exercising
+ * ZTEST Suit fail icons and auto-poilot-fix.
+ * Remove or fix once you no longer need a deliberate failure.
+ */
+ZTEST(string_suite, test_fail_demo)
 {
-	zassert_equal(strlen(""), 0, "empty string length");
+	zassert_true(false, "demo failure for ztest-suit");
 }

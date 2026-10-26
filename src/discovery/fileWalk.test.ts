@@ -24,4 +24,17 @@ describe('walkSourceFiles', () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it('treats terminal ** as recursive wildcard', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ztest-walk-'));
+    try {
+      await fs.mkdir(path.join(root, 'tests', 'math'), { recursive: true });
+      await fs.writeFile(path.join(root, 'tests', 'math', 'a.c'), 'x');
+      const files = await walkSourceFiles(root, ['tests/**'], []);
+      assert.equal(files.length, 1);
+      assert.ok(files[0].endsWith(path.join('tests', 'math', 'a.c')));
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Demo/CI mock west — used until a real `west update` tree is present.
-# If ../zephyr exists, prefer a real west from PATH instead of this script.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -29,7 +28,7 @@ while [[ $# -gt 0 ]]; do
       echo "math_suite.test_mul"
       echo "string_suite.test_strlen"
       echo "string_suite.test_strcmp"
-      echo "string_suite.test_empty_string"
+      echo "string_suite.test_fail_demo"
       exit 0
       ;;
     *) shift ;;
@@ -44,13 +43,30 @@ declare -a ALL_CASES=(
   "math_suite.test_mul:pass"
   "string_suite.test_strlen:pass"
   "string_suite.test_strcmp:pass"
-  "string_suite.test_empty_string:pass"
+  "string_suite.test_fail_demo:fail"
 )
+
+# Map suite symbol → scenario id (from testcase.yaml) for -s filtering
+matches_filter() {
+  local suite="$1"
+  local name="$2"
+  local filter="$3"
+  [[ -z "${filter}" ]] && return 0
+  [[ "${suite}" == "${filter}" ]] && return 0
+  [[ "${name}" == "${filter}"* ]] && return 0
+  [[ "${filter}" == *"${suite}"* ]] && return 0
+  # scenario ids e.g. ztest_suit.math / ztest_suit.string
+  case "${filter}" in
+    *math*) [[ "${suite}" == "math_suite" ]] && return 0 ;;
+    *string*) [[ "${suite}" == "string_suite" ]] && return 0 ;;
+  esac
+  return 1
+}
 
 echo "INFO    - Mock twister (ztest-suit fixture demo)"
 echo "INFO    - Using platform: ${platform}"
 echo "INFO    - Test path: ${test_path}"
-[[ -n "${suite_filter}" ]] && echo "INFO    - Suite filter: ${suite_filter}"
+[[ -n "${suite_filter}" ]] && echo "INFO    - Suite/scenario filter: ${suite_filter}"
 echo ""
 
 json_cases="["
@@ -64,10 +80,8 @@ for entry in "${ALL_CASES[@]}"; do
   suite="${name%%.*}"
   case_name="${name#*.}"
 
-  if [[ -n "${suite_filter}" && "${suite}" != "${suite_filter}" && "${name}" != "${suite_filter}"* ]]; then
-    if [[ "${suite_filter}" != *"${suite}"* ]]; then
-      continue
-    fi
+  if ! matches_filter "${suite}" "${name}" "${suite_filter}"; then
+    continue
   fi
 
   ran=$((ran + 1))
@@ -83,7 +97,7 @@ for entry in "${ALL_CASES[@]}"; do
   fi
   if [[ ${first} -eq 0 ]]; then json_cases+=","; fi
   first=0
-  json_cases+=$(printf '\n    {"name": "%s", "status": "%s"}' "${name}" "${status}")
+  json_cases+=$(printf '\n    {"identifier": "%s", "name": "%s", "status": "%s"}' "${name}" "${name}" "${status}")
 done
 
 json_cases+=$'\n  ]'

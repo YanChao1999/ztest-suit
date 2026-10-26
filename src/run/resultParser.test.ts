@@ -16,22 +16,55 @@ describe('splitSuiteCase', () => {
 });
 
 describe('parseTwisterJson', () => {
-  it('parses testcases array', () => {
+  it('reads identifier and skips container records', () => {
     const json = JSON.stringify({
       testsuites: [
         {
+          name: 'sample',
+          status: 'failed',
           testcases: [
-            { name: 'math_suite.test_add', status: 'passed' },
-            { name: 'math_suite.test_sub', status: 'failed' },
+            {
+              identifier: 'math_suite.test_add',
+              name: 'math_suite.test_add',
+              status: 'passed',
+            },
+            {
+              identifier: 'math_suite.test_sub',
+              name: 'math_suite.test_sub',
+              status: 'failed',
+            },
           ],
         },
       ],
     });
     const results = parseTwisterJson(json);
     assert.equal(results.length, 2);
+    assert.ok(!results.some((r) => r.caseName === 'sample'));
     const add = results.find((r) => r.caseName === 'test_add');
     assert.equal(add?.suite, 'math_suite');
     assert.equal(add?.status, 'passed');
+  });
+
+  it('preserves failures across duplicate matrix instances', () => {
+    const json = JSON.stringify({
+      testsuites: [
+        {
+          platform: 'native_sim',
+          testcases: [
+            { identifier: 's.c', name: 's.c', status: 'passed' },
+          ],
+        },
+        {
+          platform: 'qemu_x86',
+          testcases: [
+            { identifier: 's.c', name: 's.c', status: 'failed' },
+          ],
+        },
+      ],
+    });
+    const results = parseTwisterJson(json);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].status, 'failed');
   });
 });
 
@@ -46,5 +79,17 @@ describe('parseTwisterLog', () => {
     const results = parseTwisterLog(log);
     assert.ok(results.some((r) => r.caseName === 'test_add' && r.status === 'passed'));
     assert.ok(results.some((r) => r.caseName === 'test_sub' && r.status === 'failed'));
+  });
+
+  it('parses bare names after TESTSUITE announcements', () => {
+    const log = [
+      'Running TESTSUITE string_suite',
+      'START - test_fail_demo',
+      'FAIL - test_fail_demo',
+    ].join('\n');
+    const results = parseTwisterLog(log);
+    const hit = results.find((r) => r.caseName === 'test_fail_demo');
+    assert.equal(hit?.suite, 'string_suite');
+    assert.equal(hit?.status, 'failed');
   });
 });

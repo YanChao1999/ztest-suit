@@ -19,9 +19,11 @@ export interface RunResult {
 export class TwisterRunner {
   private child: ChildProcessWithoutNullStreams | null = null;
   private cancelled = false;
+  /** True from spawn until close handler finishes — survives SIGTERM. */
+  private busy = false;
 
   get isRunning(): boolean {
-    return this.child !== null && !this.child.killed;
+    return this.busy;
   }
 
   cancel(): void {
@@ -29,17 +31,35 @@ export class TwisterRunner {
       return;
     }
     this.cancelled = true;
-    this.child.kill('SIGTERM');
     const child = this.child;
+    try {
+      child.kill('SIGTERM');
+    } catch {
+      // ignore
+    }
+    const pid = child.pid;
     setTimeout(() => {
-      if (!child.killed) {
-        child.kill('SIGKILL');
+      if (!this.busy || this.child !== child) {
+        return;
+      }
+      try {
+        // Escalate if still the same in-flight process
+        if (pid !== undefined) {
+          try {
+            process.kill(pid, 0);
+            child.kill('SIGKILL');
+          } catch {
+            // already exited
+          }
+        }
+      } catch {
+        // ignore
       }
     }, 3000);
   }
 
   async run(options: RunOptions): Promise<RunResult> {
-    if (this.isRunning) {
+    if (this.busy) {
       throw new Error('A ZTEST run is already in progress');
     }
 
@@ -49,6 +69,7 @@ export class TwisterRunner {
       throw new Error('Empty run command');
     }
 
+    this.busy = true;
     return new Promise<RunResult>((resolve, reject) => {
       let stdout = '';
       let stderr = '';
@@ -61,6 +82,7 @@ export class TwisterRunner {
         });
       } catch (err) {
         this.child = null;
+        this.busy = false;
         reject(err);
         return;
       }
@@ -79,11 +101,13 @@ export class TwisterRunner {
 
       this.child.on('error', (err) => {
         this.child = null;
+        this.busy = false;
         reject(err);
       });
 
       this.child.on('close', (exitCode, signal) => {
         this.child = null;
+        this.busy = false;
         resolve({
           exitCode,
           signal,

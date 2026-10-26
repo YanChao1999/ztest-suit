@@ -26,6 +26,7 @@ export interface ListedCase {
 
 export interface ListedSuite {
   name: string;
+  scenario?: string;
   file?: string;
   line?: number;
   cases: ListedCase[];
@@ -34,6 +35,7 @@ export interface ListedSuite {
 export interface RunFilter {
   suite?: string;
   caseName?: string;
+  scenario?: string;
 }
 
 export interface RunServiceResult {
@@ -74,6 +76,7 @@ export class ZtestService {
   listSuites(): ListedSuite[] {
     return this.model.getSuites().map((s) => ({
       name: s.name,
+      scenario: s.scenario,
       file: s.file,
       line: s.line,
       cases: s.cases.map((c) => ({
@@ -104,10 +107,20 @@ export class ZtestService {
     };
   }
 
+  resolveScenario(filter: RunFilter): string | undefined {
+    if (filter.scenario) {
+      return filter.scenario;
+    }
+    if (filter.suite) {
+      return this.model.getSuite(filter.suite)?.scenario ?? filter.suite;
+    }
+    return undefined;
+  }
+
   previewCommand(filter: RunFilter = {}): string {
     const extraArgsTemplate = filter.caseName
       ? this.settings.runCaseArgs
-      : filter.suite
+      : filter.suite || filter.scenario
         ? this.settings.runSuiteArgs
         : '';
     return buildRunCommand({
@@ -119,6 +132,7 @@ export class ZtestService {
       platform: this.settings.platform,
       suite: filter.suite,
       caseName: filter.caseName,
+      scenario: this.resolveScenario(filter),
     });
   }
 
@@ -133,13 +147,18 @@ export class ZtestService {
       caseName: filter.caseName,
     });
 
+    const reportPath = resolveReportPath(this.settings);
+    const runStartedAt = Date.now();
+
     const result = await this.runner.run({
       command,
       cwd: this.settings.cwd,
     });
 
-    const reportPath = resolveReportPath(this.settings);
-    const fromJson = await loadTwisterReport(reportPath);
+    // Only accept reports rewritten during/after this run (avoid stale passes).
+    const fromJson = await loadTwisterReport(reportPath, {
+      newerThanMs: runStartedAt - 1000,
+    });
     const fromLog = parseTwisterLog(result.stdout + '\n' + result.stderr);
     let merged = mergeResults(fromJson, fromLog, filter);
 

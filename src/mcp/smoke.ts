@@ -23,10 +23,20 @@ async function main(): Promise<void> {
     throw new Error('expected math_suite and string_suite');
   }
 
+  const math = listed.suites.find((s) => s.name === 'math_suite');
+  if (!math?.scenario?.includes('math')) {
+    throw new Error(
+      `expected math_suite scenario from testcase.yaml, got ${math?.scenario}`
+    );
+  }
+
   const dry = svc.previewCommand({ suite: 'math_suite' });
   console.log(`preview: ${dry}`);
   if (!dry.includes('west twister')) {
     throw new Error('preview command missing west twister');
+  }
+  if (!dry.includes(`-s ${math.scenario}`)) {
+    throw new Error(`preview should filter by scenario ${math.scenario}: ${dry}`);
   }
 
   const run = await svc.run({ suite: 'math_suite' });

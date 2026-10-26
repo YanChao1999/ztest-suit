@@ -4,9 +4,13 @@ import { buildSettings, resolveReportPath, ZtestSettings } from './types';
 export type { ZtestSettings } from './types';
 export { resolveReportPath };
 
+/** Folder used for discovery + execution (first workspace folder). */
+export function getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
+  return vscode.workspace.workspaceFolders?.[0];
+}
+
 export function getWorkspaceFolderPath(): string | undefined {
-  const folder = vscode.workspace.workspaceFolders?.[0];
-  return folder?.uri.fsPath;
+  return getWorkspaceFolder()?.uri.fsPath;
 }
 
 export function getSettings(): ZtestSettings {
@@ -24,8 +28,8 @@ export function getSettings(): ZtestSettings {
       'runCommand',
       '{prefix} west twister -T {testPath} {extraArgs}'
     ),
-    runSuiteArgs: cfg.get<string>('runSuiteArgs', '-s {suite}'),
-    runCaseArgs: cfg.get<string>('runCaseArgs', '-s {suite}'),
+    runSuiteArgs: cfg.get<string>('runSuiteArgs', '-s {scenario}'),
+    runCaseArgs: cfg.get<string>('runCaseArgs', '-s {scenario}'),
     testPath: cfg.get<string>('testPath', 'tests'),
     platform: cfg.get<string>('platform', 'native_sim'),
     reportPath: cfg.get<string>('reportPath', 'twister-out/twister.json'),

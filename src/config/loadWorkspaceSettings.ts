@@ -23,19 +23,72 @@ export function resolveWorkspaceRoot(explicit?: string): string {
   return cwd;
 }
 
-function stripJsonComments(raw: string): string {
-  // Only strip full-line // comments. Do NOT strip /* */ — VS Code globs
-  // often contain "/**" inside strings and a naive strip corrupts them.
-  return raw
-    .split(/\r?\n/)
-    .map((line) => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('//')) {
-        return '';
+/** String-aware JSONC strip: comments + trailing commas. */
+export function stripJsonc(raw: string): string {
+  let out = '';
+  let i = 0;
+  let inString = false;
+  let stringQuote = '';
+  let escaped = false;
+
+  while (i < raw.length) {
+    const ch = raw[i];
+    const next = raw[i + 1];
+
+    if (inString) {
+      out += ch;
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === stringQuote) {
+        inString = false;
       }
-      return line;
-    })
-    .join('\n');
+      i++;
+      continue;
+    }
+
+    if (ch === '"' || ch === "'") {
+      inString = true;
+      stringQuote = ch;
+      out += ch;
+      i++;
+      continue;
+    }
+
+    if (ch === '/' && next === '/') {
+      i += 2;
+      while (i < raw.length && raw[i] !== '\n') {
+        i++;
+      }
+      continue;
+    }
+
+    if (ch === '/' && next === '*') {
+      i += 2;
+      while (i + 1 < raw.length && !(raw[i] === '*' && raw[i + 1] === '/')) {
+        i++;
+      }
+      i += 2;
+      continue;
+    }
+
+    // Trailing comma before } or ]
+    if (ch === ',') {
+      let j = i + 1;
+      while (j < raw.length && /\s/.test(raw[j])) {
+        j++;
+      }
+      if (raw[j] === '}' || raw[j] === ']') {
+        i++;
+        continue;
+      }
+    }
+
+    out += ch;
+    i++;
+  }
+  return out;
 }
 
 function readJsonFile(filePath: string): Record<string, unknown> | undefined {
@@ -44,7 +97,7 @@ function readJsonFile(filePath: string): Record<string, unknown> | undefined {
     try {
       return JSON.parse(raw) as Record<string, unknown>;
     } catch {
-      return JSON.parse(stripJsonComments(raw)) as Record<string, unknown>;
+      return JSON.parse(stripJsonc(raw)) as Record<string, unknown>;
     }
   } catch {
     return undefined;

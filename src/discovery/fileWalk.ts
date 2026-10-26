@@ -11,6 +11,12 @@ function globToRegExp(glob: string): RegExp {
       i += 3;
       continue;
     }
+    // Terminal or bare `**` means match any remaining path segments
+    if (glob.startsWith('**', i) && (i + 2 === glob.length || glob[i + 2] === '/')) {
+      pattern += '.*';
+      i += 2;
+      continue;
+    }
     if (glob[i] === '*') {
       pattern += '[^/]*';
       i += 1;

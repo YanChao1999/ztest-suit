@@ -9,6 +9,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import * as path from 'path';
 import {
   loadWorkspaceSettings,
   resolveWorkspaceRoot,
@@ -18,6 +19,38 @@ import { loadTwisterReport } from '../run/resultParser';
 import { ZtestService } from '../service/ztestService';
 
 type Json = Record<string, unknown>;
+
+/** Serialize runs that share the same workspace / twister-out directory. */
+const runQueues = new Map<string, Promise<unknown>>();
+
+function runLockKey(svc: ZtestService): string {
+  return path.resolve(resolveReportPath(svc.settings));
+}
+
+async function withRunLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const prev = runQueues.get(key) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const tail = prev.then(
+    () => gate,
+    () => gate
+  );
+  runQueues.set(key, tail);
+  await prev.then(
+    () => undefined,
+    () => undefined
+  );
+  try {
+    return await fn();
+  } finally {
+    release();
+    if (runQueues.get(key) === tail) {
+      runQueues.delete(key);
+    }
+  }
+}
 
 function createService(workspace?: unknown): ZtestService {
   const root = resolveWorkspaceRoot(
@@ -145,6 +178,9 @@ async function handleTool(name: string, args: Json) {
           typeof args.caseName === 'string' ? args.caseName : undefined,
       };
       if (args.dryRun === true) {
+        if (svc.listSuites().length === 0) {
+          await svc.discover();
+        }
         return ok({
           workspace: svc.workspaceFolder,
           command: svc.previewCommand(filter),
@@ -152,12 +188,14 @@ async function handleTool(name: string, args: Json) {
           dryRun: true,
         });
       }
-      const result = await svc.run(filter);
-      return ok({
-        workspace: svc.workspaceFolder,
-        ...result,
-        summary: svc.getSummary(),
-        suites: svc.listSuites(),
+      return withRunLock(runLockKey(svc), async () => {
+        const result = await svc.run(filter);
+        return ok({
+          workspace: svc.workspaceFolder,
+          ...result,
+          summary: svc.getSummary(),
+          suites: svc.listSuites(),
+        });
       });
     }
     case 'ztest_status': {
@@ -196,6 +234,7 @@ async function handleTool(name: string, args: Json) {
       }
       return ok({
         suite: s.name,
+        scenario: s.scenario,
         file: s.file,
         line: s.line,
         caseCount: s.cases.length,
