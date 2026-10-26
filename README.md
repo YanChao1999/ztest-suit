@@ -8,9 +8,13 @@
 
 VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from source macros, show them in a sidebar, jump to definitions, and run tests through a configurable **west / twister** command wrapper (including Docker entry scripts).
 
-![ZTEST Suit screencast — click case, navigate, auto-poilot-fix](docs/shots/vscode-ztest-demo.gif)
+![ZTEST Suit — click case → navigate to source](docs/shots/vscode-ztest-navigate.gif)
 
-*Clipped from a real VS Code screencast: click failing case → navigate to source → **auto-poilot-fix** → Copilot/Agent starts fixing.*
+*Click a failing case in the sidebar → jump to the defining `ZTEST(…)` line.*
+
+![ZTEST Suit screencast — auto-poilot-fix](docs/shots/vscode-ztest-demo.gif)
+
+*Clipped from a real VS Code screencast: **auto-poilot-fix** → Copilot/Agent starts fixing with evidence.*
 
 <details>
 <summary>Static screenshot</summary>
