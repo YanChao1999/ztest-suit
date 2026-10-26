@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85-blue?logo=visualstudiocode)](https://code.visualstudio.com/)
 [![MCP](https://img.shields.io/badge/MCP-stdio-purple)](.cursor/mcp.json)
-[![version](https://img.shields.io/badge/version-0.1.0-green)](package.json)
+[![version](https://img.shields.io/badge/version-0.2.0-green)](package.json)
 
 VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from source macros, show them in a sidebar, jump to definitions, and run tests through a configurable **west / twister** command wrapper (including Docker entry scripts).
 
@@ -50,7 +50,7 @@ VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from 
 Install the VSIX:
 
 ```bash
-code --install-extension ./ztest-suit-0.1.0.vsix
+code --install-extension ./ztest-suit-0.2.0.vsix
 ```
 
 ## Settings
@@ -76,7 +76,9 @@ Configure under **Settings → ZTEST Suit** or in `.vscode/settings.json`:
 
 Empty `commandPrefix` collapses to a bare `west …` command.
 
-### Docker wrapper example
+### Docker / virtual env wrapper example
+
+Use `ztest.commandPrefix` for Docker entry scripts **or** other virtualized toolchains (e.g. `uv run`, venv wrappers):
 
 ```json
 {
@@ -84,8 +86,15 @@ Empty `commandPrefix` collapses to a bare `west …` command.
   "ztest.testPath": "tests/bluetooth",
   "ztest.platform": "native_sim",
   "ztest.runCommand": "{prefix} west twister -T {testPath} --platform {platform} {extraArgs}",
-  "ztest.runSuiteArgs": "-s {suite}",
+  "ztest.runSuiteArgs": "-s {scenario}",
   "ztest.reportPath": "twister-out/twister.json"
+}
+```
+
+```json
+{
+  "ztest.commandPrefix": "uv run --project /path/to/tools",
+  "ztest.runCommand": "{prefix} west twister -T {testPath} --platform {platform} {extraArgs}"
 }
 ```
 
@@ -150,7 +159,7 @@ ffmpeg -y -i /tmp/ztest.xwd docs/shots/vscode-ztest-run.png
 | [Publish](.github/workflows/publish.yml) | tag `v*` | re-test, GitHub Release VSIX; Marketplace / Open VSX if secrets set |
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0
+git tag v0.2.0 && git push origin v0.2.0
 ```
 
 Secrets (optional): `VSCE_PAT`, `OVSX_PAT`.
