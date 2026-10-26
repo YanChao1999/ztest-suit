@@ -1,0 +1,14 @@
+# West / Zephyr checkout (populated by `west update`)
+.west/
+zephyr/
+modules/
+bootloader/
+tools/
+# Twister / build outputs
+build/
+twister-out*/
+.autopilot-brief.md
+
+*.pyc
+__pycache__/
+.venv/

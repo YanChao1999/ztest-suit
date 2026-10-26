@@ -1,0 +1,248 @@
+{
+  "name": "ztest-suit",
+  "displayName": "ZTEST Suit",
+  "description": "Zephyr ZTEST companion: discover cases in the sidebar, navigate to source, run via configurable west/twister wrappers.",
+  "version": "0.1.0",
+  "publisher": "ztest-suit",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YanChao1999/ztest-suit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YanChao1999/ztest-suit/issues"
+  },
+  "homepage": "https://github.com/YanChao1999/ztest-suit#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Testing",
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:ztestTests",
+    "onCommand:ztest.refresh",
+    "onCommand:ztest.runAll",
+    "onCommand:ztest.runSuite",
+    "onCommand:ztest.runCase",
+    "onCommand:ztest.cancelRun",
+    "onCommand:ztest.openCase",
+    "onCommand:ztest.autoPilotFix"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ztest.refresh",
+        "title": "ZTEST: Refresh Tests",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ztest.runAll",
+        "title": "ZTEST: Run All",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ztest.runSuite",
+        "title": "ZTEST: Run Suite",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ztest.runCase",
+        "title": "ZTEST: Run Case",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ztest.cancelRun",
+        "title": "ZTEST: Cancel Run",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "ztest.openCase",
+        "title": "ZTEST: Open Case"
+      },
+      {
+        "command": "ztest.autoPilotFix",
+        "title": "auto-poilot-fix",
+        "icon": "$(sparkle)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ztest",
+          "title": "ZTEST",
+          "icon": "resources/ztest-activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "ztest": [
+        {
+          "id": "ztestTests",
+          "name": "Tests"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "ztest.refresh",
+          "when": "view == ztestTests",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ztest.runAll",
+          "when": "view == ztestTests",
+          "group": "navigation@2"
+        },
+        {
+          "command": "ztest.cancelRun",
+          "when": "view == ztestTests && ztest.running",
+          "group": "navigation@3"
+        },
+        {
+          "command": "ztest.autoPilotFix",
+          "when": "view == ztestTests && ztest.hasFailures",
+          "group": "navigation@4"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ztest.autoPilotFix",
+          "when": "ztest.hasFailures"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "ztest.runSuite",
+          "when": "view == ztestTests && viewItem == ztestSuite",
+          "group": "inline@1"
+        },
+        {
+          "command": "ztest.runCase",
+          "when": "view == ztestTests && viewItem == ztestCase",
+          "group": "inline@1"
+        },
+        {
+          "command": "ztest.runSuite",
+          "when": "view == ztestTests && viewItem == ztestSuite",
+          "group": "1_run@1"
+        },
+        {
+          "command": "ztest.runCase",
+          "when": "view == ztestTests && viewItem == ztestCase",
+          "group": "1_run@1"
+        },
+        {
+          "command": "ztest.openCase",
+          "when": "view == ztestTests && viewItem == ztestCase",
+          "group": "2_nav@1"
+        },
+        {
+          "command": "ztest.autoPilotFix",
+          "when": "view == ztestTests && ztest.hasFailures",
+          "group": "3_fix@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ZTEST Suit",
+      "properties": {
+        "ztest.commandPrefix": {
+          "type": "string",
+          "default": "",
+          "description": "Prefix prepended to west commands (e.g. ./.start_docker.sh -b native_sim)."
+        },
+        "ztest.cwd": {
+          "type": "string",
+          "default": "${workspaceFolder}",
+          "description": "Working directory for twister/west commands."
+        },
+        "ztest.listCommand": {
+          "type": "string",
+          "default": "{prefix} west twister --list-tests -T {testPath}",
+          "description": "Optional list-tests command template (MVP discovery uses source scan)."
+        },
+        "ztest.runCommand": {
+          "type": "string",
+          "default": "{prefix} west twister -T {testPath} {extraArgs}",
+          "description": "Run command template. Variables: {prefix}, {workspaceFolder}, {testPath}, {platform}, {suite}, {case}, {scenario}, {extraArgs}."
+        },
+        "ztest.runSuiteArgs": {
+          "type": "string",
+          "default": "-s {scenario}",
+          "description": "Extra args when running a suite. Inserted into {extraArgs}. Prefer {scenario} (testcase.yaml id); {suite} is the ZTEST_SUITE symbol."
+        },
+        "ztest.runCaseArgs": {
+          "type": "string",
+          "default": "-s {scenario}",
+          "description": "Extra args when running a case. Prefer {scenario}; MVP runs the scenario then matches the case in results."
+        },
+        "ztest.testPath": {
+          "type": "string",
+          "default": "tests",
+          "description": "Path passed to twister -T."
+        },
+        "ztest.platform": {
+          "type": "string",
+          "default": "native_sim",
+          "description": "Platform for --platform when used in templates."
+        },
+        "ztest.reportPath": {
+          "type": "string",
+          "default": "twister-out/twister.json",
+          "description": "Twister JSON report path relative to cwd (or absolute)."
+        },
+        "ztest.scanGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/*.{c,cpp,h,hpp}"
+          ],
+          "description": "Globs used to discover ZTEST macros."
+        },
+        "ztest.scanExclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/build/**",
+            "**/twister-out*/**",
+            "**/modules/**",
+            "**/.git/**",
+            "**/node_modules/**"
+          ],
+          "description": "Globs excluded from ZTEST discovery."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "NODE_OPTIONS=--max-old-space-size=4096 tsc -p ./",
+    "watch": "NODE_OPTIONS=--max-old-space-size=4096 tsc -watch -p ./",
+    "lint": "NODE_OPTIONS=--max-old-space-size=4096 tsc -p ./ --noEmit",
+    "mcp": "node out/mcp/server.js",
+    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/discovery/scenarioMap.test.js out/config/loadWorkspaceSettings.test.js out/copilot/autoPilotFix.test.js",
+    "test:mcp-smoke": "node out/mcp/smoke.js",
+    "test": "npm run compile && npm run test:unit && npm run test:mcp-smoke",
+    "package": "vsce package",
+    "publish:vsce": "vsce publish",
+    "publish:ovsx": "ovsx publish"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.2",
+    "ovsx": "^0.10.1",
+    "typescript": "^5.3.3"
+  }
+}

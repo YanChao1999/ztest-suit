@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ztest-suit": {
+      "command": "node",
+      "args": ["${workspaceFolder}/out/mcp/server.js"],
+      "env": {
+        "ZTEST_WORKSPACE": "${workspaceFolder}/fixtures/sample-west",
+        "ZEPHYR_BASE": "${workspaceFolder}/fixtures/zephyr"
+      }
+    }
+  }
+}
