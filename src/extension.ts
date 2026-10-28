@@ -5,6 +5,7 @@ import {
   getWorkspaceFolderPath,
   resolveReportPath,
 } from './config/settings';
+import { scopeScanGlobsToTestPath } from './discovery/scanScope';
 import { applyScanToModel, scanFiles } from './discovery/ztestScanner';
 import { TestModel } from './model/testModel';
 import { buildRunCommand } from './run/commandBuilder';
@@ -91,9 +92,13 @@ async function refreshTests(): Promise<void> {
         ? settings.scanExclude[0]
         : `{${settings.scanExclude.join(',')}}`;
 
-  // Scope discovery to the same folder used for execution (multi-root safe).
+  // Scope discovery under ztest.testPath (same root as twister -T), multi-root safe.
+  const includeGlobs = scopeScanGlobsToTestPath(
+    settings.testPath,
+    settings.scanGlobs
+  );
   const uris: vscode.Uri[] = [];
-  for (const glob of settings.scanGlobs) {
+  for (const glob of includeGlobs) {
     const includePattern = new vscode.RelativePattern(folder, glob);
     const excludePattern = exclude
       ? new vscode.RelativePattern(folder, exclude)
