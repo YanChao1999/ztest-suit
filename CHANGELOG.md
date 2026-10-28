@@ -1,22 +1,15 @@
 # Changelog
 
-## [0.2.0] — unreleased
-
-Release line prepared on `main` after v0.1.0.
+## [0.0.2] — unreleased
 
 ### Fixed
 
 - Scope ZTEST source discovery under `ztest.testPath` (same root as twister `-T`), so trees like `src/zephyr` are not scanned when `testPath` is `tests/`
 - Default `scanExclude` now includes `**/zephyr/**`, `**/bootloader/**`
 
-### Planned / in progress
+### Docs
 
-- Marketplace / Open VSX publish once `VSCE_PAT` / `OVSX_PAT` are configured
-- Docs for virtualized toolchains (Docker, uv, and similar wrappers via `commandPrefix`)
-
-### Notes
-
-Bump package / MCP / README version markers to `0.2.0`. Tag `v0.2.0` when the release content is ready.
+- Document Docker / uv-style `commandPrefix` wrappers
 
 ## [0.1.0] — 2026-10-26
 
