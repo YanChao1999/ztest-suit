@@ -1,15 +1,16 @@
 # Changelog
 
-## [0.0.2] — unreleased
+## [0.2.0] — 2026-10-28
 
 ### Fixed
 
 - Scope ZTEST source discovery under `ztest.testPath` (same root as twister `-T`), so trees like `src/zephyr` are not scanned when `testPath` is `tests/`
 - Default `scanExclude` now includes `**/zephyr/**`, `**/bootloader/**`
 
-### Docs
+### Added
 
-- Document Docker / uv-style `commandPrefix` wrappers
+- Brand SVG/PNG icons (`resources/ztest-icon.*`) and refreshed activity-bar glyph
+- Docs for Docker / uv-style `commandPrefix` wrappers
 
 ## [0.1.0] — 2026-10-26
 
