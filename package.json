@@ -5,6 +5,7 @@
   "version": "0.0.2",
   "publisher": "ztest-suit",
   "license": "MIT",
+  "icon": "resources/ztest-icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/YanChao1999/ztest-suit.git"

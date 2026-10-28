@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ZTEST Suit">
+  <defs>
+    <linearGradient id="bg" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B4F6C"/>
+      <stop offset="1" stop-color="#0A7A6A"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)"/>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="none" stroke="#ffffff28" stroke-width="2"/>
+  <!-- Bold Z -->
+  <path
+    fill="#E9FFF8"
+    d="M36 34h56a3 3 0 0 1 2.2 4.9L56.6 70H92a3 3 0 1 1 0 6H36a3 3 0 0 1-2.2-4.9L71.4 40H36a3 3 0 1 1 0-6z"
+  />
+  <!-- Pass check -->
+  <path
+    fill="#5CFFB0"
+    stroke="#0A7A6A"
+    stroke-width="1.5"
+    stroke-linejoin="round"
+    d="M84.8 84.2a4.2 4.2 0 0 1 0 5.9L67.2 107.7a4.2 4.2 0 0 1-5.9 0L50.6 97a4.2 4.2 0 1 1 5.9-5.9l7.7 7.7 14.7-14.6a4.2 4.2 0 0 1 5.9 0z"
+  />
+</svg>

@@ -1,3 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <path fill="currentColor" d="M7 2h10v2H7V2zm1 4h8l1 3H7l1-3zm-2 5h14v2h-1.2l-1.1 9H8.3L7.2 13H6v-2zm3.3 2l.7 6h4l.7-6H9.3z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <!-- Monochrome activity-bar icon: Z + check -->
+  <path
+    fill="currentColor"
+    d="M4.5 4.25c0-.41.34-.75.75-.75h13.5a.75.75 0 0 1 .56 1.25L11.6 13.5h6.65a.75.75 0 0 1 0 1.5H5.75a.75.75 0 0 1-.56-1.25L12.4 5H5.25a.75.75 0 0 1-.75-.75Z"
+  />
+  <path
+    fill="currentColor"
+    d="M15.78 15.97a.75.75 0 0 1 0 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-1.75-1.75a.75.75 0 1 1 1.06-1.06l1.22 1.22 2.97-2.97a.75.75 0 0 1 1.06 0Z"
+  />
 </svg>
