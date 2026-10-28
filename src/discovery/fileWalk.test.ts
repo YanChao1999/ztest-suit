@@ -37,4 +37,28 @@ describe('walkSourceFiles', () => {
       await fs.rm(root, { recursive: true, force: true });
     }
   });
+
+  it('skips zephyr trees even when include globs are wide', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ztest-walk-'));
+    try {
+      await fs.mkdir(path.join(root, 'tests'), { recursive: true });
+      await fs.mkdir(path.join(root, 'src', 'zephyr', 'tests'), {
+        recursive: true,
+      });
+      await fs.writeFile(path.join(root, 'tests', 'app.c'), 'x');
+      await fs.writeFile(
+        path.join(root, 'src', 'zephyr', 'tests', 'kernel.c'),
+        'y'
+      );
+      const files = await walkSourceFiles(
+        root,
+        ['tests/**/*.{c,h}'],
+        ['**/zephyr/**']
+      );
+      assert.equal(files.length, 1);
+      assert.ok(files[0].endsWith(path.join('tests', 'app.c')));
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
 });

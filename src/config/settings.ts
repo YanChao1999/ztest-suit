@@ -37,7 +37,9 @@ export function getSettings(): ZtestSettings {
     scanExclude: cfg.get<string[]>('scanExclude', [
       '**/build/**',
       '**/twister-out*/**',
+      '**/zephyr/**',
       '**/modules/**',
+      '**/bootloader/**',
       '**/.git/**',
       '**/node_modules/**',
     ]),

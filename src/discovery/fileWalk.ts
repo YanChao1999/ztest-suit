@@ -95,6 +95,9 @@ export async function walkSourceFiles(
         base === '.git' ||
         base === 'node_modules' ||
         base === 'build' ||
+        base === 'zephyr' ||
+        base === 'modules' ||
+        base === 'bootloader' ||
         base.startsWith('twister-out')
       ) {
         if (entry.isDirectory()) {

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { ZtestSettings, resolveReportPath } from '../config/types';
 import { walkSourceFiles } from '../discovery/fileWalk';
+import { scopeScanGlobsToTestPath } from '../discovery/scanScope';
 import {
   applyScanToModel,
   scanFiles,
@@ -58,9 +59,13 @@ export class ZtestService {
   ) {}
 
   async discover(): Promise<{ suites: ListedSuite[]; filesScanned: number }> {
+    const includeGlobs = scopeScanGlobsToTestPath(
+      this.settings.testPath,
+      this.settings.scanGlobs
+    );
     const files = await walkSourceFiles(
       this.workspaceFolder,
-      this.settings.scanGlobs,
+      includeGlobs,
       this.settings.scanExclude
     );
     const scan: ScanResult = await scanFiles(files);

@@ -183,7 +183,7 @@
         "ztest.testPath": {
           "type": "string",
           "default": "tests",
-          "description": "Path passed to twister -T."
+          "description": "Twister -T path and the root used for ZTEST source discovery (scanGlobs are scoped under this directory)."
         },
         "ztest.platform": {
           "type": "string",
@@ -203,7 +203,7 @@
           "default": [
             "**/*.{c,cpp,h,hpp}"
           ],
-          "description": "Globs used to discover ZTEST macros."
+          "description": "Globs used to discover ZTEST macros. Scoped under ztest.testPath unless already rooted there."
         },
         "ztest.scanExclude": {
           "type": "array",
@@ -213,7 +213,9 @@
           "default": [
             "**/build/**",
             "**/twister-out*/**",
+            "**/zephyr/**",
             "**/modules/**",
+            "**/bootloader/**",
             "**/.git/**",
             "**/node_modules/**"
           ],
@@ -228,7 +230,7 @@
     "watch": "NODE_OPTIONS=--max-old-space-size=4096 tsc -watch -p ./",
     "lint": "NODE_OPTIONS=--max-old-space-size=4096 tsc -p ./ --noEmit",
     "mcp": "node out/mcp/server.js",
-    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/discovery/scenarioMap.test.js out/config/loadWorkspaceSettings.test.js out/copilot/autoPilotFix.test.js",
+    "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/discovery/scanScope.test.js out/discovery/scenarioMap.test.js out/config/loadWorkspaceSettings.test.js out/copilot/autoPilotFix.test.js",
     "test:mcp-smoke": "node out/mcp/smoke.js",
     "test": "npm run compile && npm run test:unit && npm run test:mcp-smoke",
     "package": "vsce package",

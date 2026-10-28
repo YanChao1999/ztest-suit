@@ -4,6 +4,11 @@
 
 Release line prepared on `main` after v0.1.0.
 
+### Fixed
+
+- Scope ZTEST source discovery under `ztest.testPath` (same root as twister `-T`), so trees like `src/zephyr` are not scanned when `testPath` is `tests/`
+- Default `scanExclude` now includes `**/zephyr/**`, `**/bootloader/**`
+
 ### Planned / in progress
 
 - Marketplace / Open VSX publish once `VSCE_PAT` / `OVSX_PAT` are configured

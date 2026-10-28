@@ -27,7 +27,9 @@ export const DEFAULT_SETTINGS: Omit<ZtestSettings, 'cwd'> = {
   scanExclude: [
     '**/build/**',
     '**/twister-out*/**',
+    '**/zephyr/**',
     '**/modules/**',
+    '**/bootloader/**',
     '**/.git/**',
     '**/node_modules/**',
   ],
