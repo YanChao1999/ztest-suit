@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0] — unreleased
+
+### Fixed
+
+- Ensure `ztest.platform` takes effect: default run template includes `--platform {platform}`, and the flag is auto-appended if a custom template omitted it
+- Recover from stuck "in progress" when the child dies or `out/` is deleted mid-run — Refresh / Cancel clears busy state and running icons
+
 ## [0.2.0] — 2026-10-28
 
 ### Fixed

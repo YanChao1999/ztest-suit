@@ -251,7 +251,7 @@ async function handleTool(name: string, args: Json) {
 
 async function main(): Promise<void> {
   const server = new Server(
-    { name: 'ztest-suit', version: '0.2.0' },
+    { name: 'ztest-suit', version: '0.3.0' },
     { capabilities: { tools: {} } }
   );
 

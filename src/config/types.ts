@@ -16,8 +16,10 @@ export interface ZtestSettings {
 
 export const DEFAULT_SETTINGS: Omit<ZtestSettings, 'cwd'> = {
   commandPrefix: '',
-  listCommand: '{prefix} west twister --list-tests -T {testPath}',
-  runCommand: '{prefix} west twister -T {testPath} {extraArgs}',
+  listCommand:
+    '{prefix} west twister --list-tests -T {testPath} --platform {platform}',
+  runCommand:
+    '{prefix} west twister -T {testPath} --platform {platform} {extraArgs}',
   runSuiteArgs: '-s {scenario}',
   runCaseArgs: '-s {scenario}',
   testPath: 'tests',

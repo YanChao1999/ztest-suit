@@ -63,10 +63,35 @@ describe('buildRunCommand', () => {
       prefix: '',
       workspaceFolder: '/ws',
       testPath: 'tests',
-      platform: 'native_sim',
+      platform: '',
       suite: 'math_suite',
     });
     assert.equal(cmd, 'west twister -s math_suite');
+  });
+
+  it('auto-appends --platform when template omitted it', () => {
+    const cmd = buildRunCommand({
+      runCommandTemplate: '{prefix} west twister -T {testPath} {extraArgs}',
+      extraArgsTemplate: '',
+      prefix: '',
+      workspaceFolder: '/ws',
+      testPath: 'tests',
+      platform: 'native_sim',
+    });
+    assert.equal(cmd, 'west twister -T tests --platform native_sim');
+  });
+
+  it('does not duplicate --platform when already present', () => {
+    const cmd = buildRunCommand({
+      runCommandTemplate:
+        'west twister -T {testPath} --platform {platform} {extraArgs}',
+      extraArgsTemplate: '',
+      prefix: '',
+      workspaceFolder: '/ws',
+      testPath: 'tests',
+      platform: 'qemu_x86',
+    });
+    assert.equal(cmd, 'west twister -T tests --platform qemu_x86');
   });
 });
 

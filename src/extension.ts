@@ -78,6 +78,9 @@ export function deactivate(): void {
 }
 
 async function refreshTests(): Promise<void> {
+  // Refresh also recovers from stuck "in progress" (e.g. out/ deleted mid-run).
+  await clearStaleRunState('refresh');
+
   const folder = getWorkspaceFolder();
   if (!folder) {
     vscode.window.showWarningMessage('ZTEST: open a workspace folder first.');
@@ -194,8 +197,11 @@ async function pickCase(): Promise<{ suite: string; caseName: string } | undefin
 }
 
 async function runTests(filter: { suite?: string; caseName?: string }): Promise<void> {
+  // Reap dead children left after forced stops / deleted out dirs.
   if (runner.isRunning) {
-    vscode.window.showWarningMessage('ZTEST: a run is already in progress.');
+    vscode.window.showWarningMessage(
+      'ZTEST: a run is already in progress. Use Cancel or Refresh to recover.'
+    );
     return;
   }
 
@@ -333,13 +339,41 @@ function clearRunningStatuses(): void {
   }
 }
 
-function cancelRun(): void {
+async function clearStaleRunState(reason: string): Promise<void> {
+  const wasBusy = runner.isRunning;
+  if (wasBusy) {
+    runner.forceReset();
+    output.appendLine(
+      `ZTEST: cleared stuck run state (${reason}). Use Cancel next time if a process is still alive.`
+    );
+  }
+  clearRunningStatuses();
+  await vscode.commands.executeCommand('setContext', 'ztest.running', false);
+  model.notifyChanged();
+  updateStatusBar();
+}
+
+async function cancelRun(): Promise<void> {
   if (!runner.isRunning) {
+    // Still clear UI if statuses/context were left as running.
+    const summary = model.getSummary();
+    if (summary.running > 0) {
+      await clearStaleRunState('cancel-ui');
+      vscode.window.showInformationMessage('ZTEST: cleared stuck running icons.');
+      return;
+    }
     vscode.window.showInformationMessage('ZTEST: no run in progress.');
     return;
   }
   runner.cancel();
   output.appendLine('ZTEST: cancelling...');
+  // If the child is already dead, cancel() finishes immediately — sync UI.
+  if (!runner.isRunning) {
+    clearRunningStatuses();
+    await vscode.commands.executeCommand('setContext', 'ztest.running', false);
+    model.notifyChanged();
+    updateStatusBar();
+  }
 }
 
 function updateStatusBar(): void {
