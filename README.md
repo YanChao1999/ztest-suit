@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85-blue?logo=visualstudiocode)](https://code.visualstudio.com/)
 [![MCP](https://img.shields.io/badge/MCP-stdio-purple)](.cursor/mcp.json)
-[![version](https://img.shields.io/badge/version-0.2.0-green)](package.json)
+[![version](https://img.shields.io/badge/version-0.3.0-green)](package.json)
 
 VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from source macros, show them in a sidebar, jump to definitions, and run tests through a configurable **west / twister** command wrapper (including Docker entry scripts).
 
@@ -50,7 +50,7 @@ VS Code / Cursor extension for Zephyr **ZTEST**: discover suites and cases from 
 Install the VSIX:
 
 ```bash
-code --install-extension ./ztest-suit-0.2.0.vsix
+code --install-extension ./ztest-suit-0.3.0.vsix
 ```
 
 ## Settings
@@ -159,7 +159,7 @@ ffmpeg -y -i /tmp/ztest.xwd docs/shots/vscode-ztest-run.png
 | [Publish](.github/workflows/publish.yml) | tag `v*` | re-test, GitHub Release VSIX; Marketplace / Open VSX if secrets set |
 
 ```bash
-git tag v0.2.0 && git push origin v0.2.0
+git tag v0.3.0 && git push origin v0.3.0
 ```
 
 Secrets (optional): `VSCE_PAT`, `OVSX_PAT`.

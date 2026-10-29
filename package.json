@@ -2,7 +2,7 @@
   "name": "ztest-suit",
   "displayName": "ZTEST Suit",
   "description": "Zephyr ZTEST companion: discover cases in the sidebar, navigate to source, run via configurable west/twister wrappers.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "ztest-suit",
   "license": "MIT",
   "icon": "resources/ztest-icon.png",
