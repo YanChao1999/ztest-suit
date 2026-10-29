@@ -22,11 +22,11 @@ export function getSettings(): ZtestSettings {
     cwd: cfg.get<string>('cwd', '${workspaceFolder}'),
     listCommand: cfg.get<string>(
       'listCommand',
-      '{prefix} west twister --list-tests -T {testPath}'
+      '{prefix} west twister --list-tests -T {testPath} --platform {platform}'
     ),
     runCommand: cfg.get<string>(
       'runCommand',
-      '{prefix} west twister -T {testPath} {extraArgs}'
+      '{prefix} west twister -T {testPath} --platform {platform} {extraArgs}'
     ),
     runSuiteArgs: cfg.get<string>('runSuiteArgs', '-s {scenario}'),
     runCaseArgs: cfg.get<string>('runCaseArgs', '-s {scenario}'),

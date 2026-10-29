@@ -93,7 +93,7 @@ export function buildRunCommand(options: {
     scenario,
   });
 
-  return expandCommand(options.runCommandTemplate, {
+  let command = expandCommand(options.runCommandTemplate, {
     prefix: options.prefix,
     workspaceFolder: options.workspaceFolder,
     testPath: options.testPath,
@@ -103,6 +103,19 @@ export function buildRunCommand(options: {
     scenario,
     extraArgs,
   });
+
+  // Ensure ztest.platform takes effect even if the template omitted {platform}.
+  const platform = (options.platform ?? '').trim();
+  if (platform && !hasPlatformFlag(command)) {
+    command = normalizeWhitespace(`${command} --platform ${platform}`);
+  }
+
+  return command;
+}
+
+/** Detect `--platform` / `-p` already present in the expanded command. */
+export function hasPlatformFlag(command: string): boolean {
+  return /(?:^|\s)(?:--platform|-p)(?:\s|=|$)/.test(command);
 }
 
 /**

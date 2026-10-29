@@ -163,13 +163,13 @@
         },
         "ztest.listCommand": {
           "type": "string",
-          "default": "{prefix} west twister --list-tests -T {testPath}",
+          "default": "{prefix} west twister --list-tests -T {testPath} --platform {platform}",
           "description": "Optional list-tests command template (MVP discovery uses source scan)."
         },
         "ztest.runCommand": {
           "type": "string",
-          "default": "{prefix} west twister -T {testPath} {extraArgs}",
-          "description": "Run command template. Variables: {prefix}, {workspaceFolder}, {testPath}, {platform}, {suite}, {case}, {scenario}, {extraArgs}."
+          "default": "{prefix} west twister -T {testPath} --platform {platform} {extraArgs}",
+          "description": "Run command template. Variables: {prefix}, {workspaceFolder}, {testPath}, {platform}, {suite}, {case}, {scenario}, {extraArgs}. If {platform} is omitted, --platform is appended automatically when ztest.platform is set."
         },
         "ztest.runSuiteArgs": {
           "type": "string",
@@ -189,7 +189,7 @@
         "ztest.platform": {
           "type": "string",
           "default": "native_sim",
-          "description": "Platform for --platform when used in templates."
+          "description": "Twister --platform value. Applied via {platform} in runCommand, or auto-appended if the template has no --platform/-p."
         },
         "ztest.reportPath": {
           "type": "string",
