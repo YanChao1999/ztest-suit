@@ -91,18 +91,21 @@ export async function walkSourceFiles(
         // Keep simple: if any path segment is in denylist
       }
       const base = entry.name;
+      // Only skip well-known *workspace-root* trees by name. Nested folders
+      // named `zephyr` (e.g. tests/ports/zephyr) must remain scannable —
+      // those are covered by root-anchored exclude globs like `zephyr/**`.
+      const rootSideTree =
+        (base === 'zephyr' || base === 'modules' || base === 'bootloader') &&
+        !rel.includes('/');
       if (
-        base === '.git' ||
-        base === 'node_modules' ||
-        base === 'build' ||
-        base === 'zephyr' ||
-        base === 'modules' ||
-        base === 'bootloader' ||
-        base.startsWith('twister-out')
+        entry.isDirectory() &&
+        (base === '.git' ||
+          base === 'node_modules' ||
+          base === 'build' ||
+          rootSideTree ||
+          base.startsWith('twister-out'))
       ) {
-        if (entry.isDirectory()) {
-          continue;
-        }
+        continue;
       }
       if (entry.isDirectory()) {
         await walk(abs);

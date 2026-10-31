@@ -29,9 +29,11 @@ export const DEFAULT_SETTINGS: Omit<ZtestSettings, 'cwd'> = {
   scanExclude: [
     '**/build/**',
     '**/twister-out*/**',
-    '**/zephyr/**',
-    '**/modules/**',
-    '**/bootloader/**',
+    // Root-anchored west layout (do NOT use **/zephyr/** — that hides
+    // legitimate trees like tests/ports/zephyr in third-party SDKs).
+    'zephyr/**',
+    'modules/**',
+    'bootloader/**',
     '**/.git/**',
     '**/node_modules/**',
   ],

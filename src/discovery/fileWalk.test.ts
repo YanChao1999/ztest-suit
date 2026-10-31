@@ -38,25 +38,27 @@ describe('walkSourceFiles', () => {
     }
   });
 
-  it('skips zephyr trees even when include globs are wide', async () => {
+  it('skips workspace-root zephyr/ but not nested tests/ports/zephyr', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ztest-walk-'));
     try {
-      await fs.mkdir(path.join(root, 'tests'), { recursive: true });
-      await fs.mkdir(path.join(root, 'src', 'zephyr', 'tests'), {
+      await fs.mkdir(path.join(root, 'tests', 'ports', 'zephyr', 'http'), {
         recursive: true,
       });
-      await fs.writeFile(path.join(root, 'tests', 'app.c'), 'x');
+      await fs.mkdir(path.join(root, 'zephyr', 'tests'), { recursive: true });
       await fs.writeFile(
-        path.join(root, 'src', 'zephyr', 'tests', 'kernel.c'),
-        'y'
+        path.join(root, 'tests', 'ports', 'zephyr', 'http', 't.c'),
+        'x'
       );
+      await fs.writeFile(path.join(root, 'zephyr', 'tests', 'kernel.c'), 'y');
       const files = await walkSourceFiles(
         root,
         ['tests/**/*.{c,h}'],
-        ['**/zephyr/**']
+        ['zephyr/**']
       );
       assert.equal(files.length, 1);
-      assert.ok(files[0].endsWith(path.join('tests', 'app.c')));
+      assert.ok(
+        files[0].endsWith(path.join('tests', 'ports', 'zephyr', 'http', 't.c'))
+      );
     } finally {
       await fs.rm(root, { recursive: true, force: true });
     }

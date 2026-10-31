@@ -214,13 +214,13 @@
           "default": [
             "**/build/**",
             "**/twister-out*/**",
-            "**/zephyr/**",
-            "**/modules/**",
-            "**/bootloader/**",
+            "zephyr/**",
+            "modules/**",
+            "bootloader/**",
             "**/.git/**",
             "**/node_modules/**"
           ],
-          "description": "Globs excluded from ZTEST discovery."
+          "description": "Globs excluded from ZTEST discovery. Prefer root-anchored zephyr/** (not **/zephyr/**) so nested paths like tests/ports/zephyr still scan."
         }
       }
     }
@@ -233,6 +233,7 @@
     "mcp": "node out/mcp/server.js",
     "test:unit": "node --test out/run/commandBuilder.test.js out/run/resultParser.test.js out/discovery/ztestScanner.test.js out/discovery/fileWalk.test.js out/discovery/scanScope.test.js out/discovery/scenarioMap.test.js out/config/loadWorkspaceSettings.test.js out/copilot/autoPilotFix.test.js",
     "test:mcp-smoke": "node out/mcp/smoke.js",
+    "test:real-trees": "npm run compile && node scripts/validate_real_trees.mjs",
     "test": "npm run compile && npm run test:unit && npm run test:mcp-smoke",
     "package": "vsce package",
     "publish:vsce": "vsce publish",
