@@ -1,6 +1,16 @@
 # Changelog
 
-## [0.3.0] — unreleased
+## [Unreleased]
+
+### Fixed
+
+- Root-anchored `zephyr/**` exclude (not `**/zephyr/**`) and stop skipping nested dirs named `zephyr`, so trees like Memfault `tests/ports/zephyr` still discover
+
+### Added
+
+- Real-tree discovery harness: `npm run test:real-trees` + `docs/real-tree-validation.md` (5 upstream clones)
+
+## [0.3.0] — 2026-10-29
 
 ### Fixed
 
